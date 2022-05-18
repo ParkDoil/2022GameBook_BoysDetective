@@ -4,6 +4,8 @@
 #include "Framework.h"
 #include "Framework/Scene.h"
 #include "Framework/Window.h"
+#include "Framework/Csv.h"
+#include "Framework/Csvparser.h"
 
 App g_App;
 
@@ -38,6 +40,7 @@ bool App_Init(void)
 	}
 
 	Random_Init();
+	csvParser();
 
 	if (false == Audio_Init())
 	{

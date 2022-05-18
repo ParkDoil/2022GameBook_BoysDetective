@@ -39,7 +39,6 @@ int countCategory(const char* firstLine)
 		if (*firstLine == '@')
 		{
 			++result;
-
 		}
 
 		++firstLine;
@@ -59,7 +58,7 @@ void CreateCsvFile(CsvFile* csvFile, const char* filename)
 		csvFile->Items[i] = (CsvItem*)malloc(sizeof(CsvItem) * csvFile->ColumnCount);
 	}
 
-	//
+	// 이승일바보
 	s_BufferPointer = s_Buffer;
 	while (*s_BufferPointer != '\0')
 	{

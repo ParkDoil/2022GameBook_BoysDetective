@@ -32,8 +32,7 @@ void csvParser(void)
 
 				char* strt = ParseToAscii(csvFile.Items[r][c]);
 				wchar_t* str = ParseToUnicode(strt);
-
-
+				
 				switch (c) {
 				case 0: parsing_dt.sceneData[r - 1].ID = atoi(str); break;
 				case 1: parsing_dt.sceneData[r - 1].SENCE_NUMBER = atoi(str); break;
@@ -55,7 +54,7 @@ void csvParser(void)
 				case 17: parsing_dt.sceneData[r - 1].CHOOSE_NUM_3 = atoi(str); break;
 				case 18: wcscpy_s(parsing_dt.sceneData[r - 1].CHOOSE_TEXT_1,sizeof(parsing_dt.sceneData[r - 1].CHOOSE_TEXT_1), str); break;
 				case 19: wcscpy_s(parsing_dt.sceneData[r - 1].CHOOSE_TEXT_2,sizeof(parsing_dt.sceneData[r - 1].CHOOSE_TEXT_2), str); break;
-				case 20: wcscpy_s(parsing_dt.sceneData[r - 1].CHOOSE_TEXT_3, sizeof(parsing_dt.sceneData[r - 1].CHOOSE_TEXT_3), str); break;
+				case 20: wcscpy_s(parsing_dt.sceneData[r - 1].CHOOSE_TEXT_3,sizeof(parsing_dt.sceneData[r - 1].CHOOSE_TEXT_3), str); break;
 				case 21: wcscpy_s(parsing_dt.sceneData[r - 1].CHOOSE_STYLE,sizeof(parsing_dt.sceneData[r - 1].CHOOSE_STYLE), str); break;
 				}
 			}

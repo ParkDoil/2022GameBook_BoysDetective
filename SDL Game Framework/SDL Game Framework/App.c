@@ -91,7 +91,7 @@ int32 App_Run(void)
 
 	Timer_Init(FPS);
 
-	Scene_SetNextScene(SCENE_EXTRA);
+	Scene_SetNextScene(SCENE_TITLESCENE);
 
 	SDL_Event event;
 	while (true)

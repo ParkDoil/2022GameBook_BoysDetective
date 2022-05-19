@@ -366,20 +366,20 @@ void release_main(void)
 
 typedef struct SceneData
 {
-	int32		nowIndex;
-	int32		ChooseCount;
-	int32		LineCount;
-	int32		delayCount;
-	Image		BackGround;
-	Music		Main_BGM;
-	Text		GuideLine[20];
-	Text		Choose_1;
-	Text		Choose_2;
-	Text		Choose_3;
-	Text		Coursur;
-	bool		isUp;
-	bool		isDown;
-	bool		isSkip;
+	int32      nowIndex;
+	int32      ChooseCount;
+	int32      LineCount;
+	int32      delayCount;
+	Image      BackGround;
+	Music      Main_BGM;
+	Text      GuideLine[20];
+	Text      Choose_1;
+	Text      Choose_2;
+	Text      Choose_3;
+	Text      Coursur;
+	bool      isUp;
+	bool      isDown;
+	bool      isSkip;
 } SceneData;
 
 void init_Extra(void)
@@ -393,8 +393,8 @@ void init_Extra(void)
 	data->LineCount = 1;
 	data->delayCount = 0;
 
-	Text_CreateText(&data->Coursur,"GmarketSansTTFLight.ttf", 24, L" ▶", wcslen(L" ▶")); //커서 생성
-	
+	Text_CreateText(&data->Coursur, "GmarketSansTTFLight.ttf", 24, L" ▶", wcslen(L" ▶")); //커서 생성
+
 	// 개행문자 처리부
 	wchar_t* rawString = parsing_dt.sceneData[data->nowIndex].TEXT;
 	wchar_t* lineStart = rawString;
@@ -447,11 +447,16 @@ void init_Extra(void)
 	}
 	// 이미지 처리부
 	Image_LoadImage(&data->BackGround, parsing_dt.sceneData[data->nowIndex].MAIN_IMAGE);
-	
+
 	////사운드
-	//Audio_LoadMusic(&data->Main_BGM, parsing_dt.sceneData[data->nowIndex].SOUND_NAME);
-	//float Volume = 1.0f;
-	//Audio_SetVolume(Volume);
+	if (parsing_dt.sceneData[data->nowIndex].SOUND_NAME != NULL)
+	{
+		Audio_LoadMusic(&data->Main_BGM, parsing_dt.sceneData[data->nowIndex].SOUND_NAME);
+		Audio_GetVolume();
+		float sound = 1.0f;
+		Audio_SetVolume(sound);
+		Audio_Play(&data->Main_BGM, INFINITY_LOOP);
+	}
 
 	data->isUp = true;
 	data->isDown = false;
@@ -510,7 +515,7 @@ void update_Extra(void)
 				Index = (parsing_dt.sceneData[data->nowIndex].CHOOSE_1_NEXT_SCENE) - 1;
 				Scene_SetNextScene(SCENE_EXTRA);
 			}
-			if (!data->isUp&&!data->isDown)
+			if (!data->isUp && !data->isDown)
 			{
 				Index = (parsing_dt.sceneData[data->nowIndex].CHOOSE_2_NEXT_SCENE) - 1;
 				Scene_SetNextScene(SCENE_EXTRA);
@@ -533,7 +538,7 @@ void update_Extra(void)
 				data->isUp = !data->isUp;
 			}
 		}
-		else if(data->ChooseCount == 3)
+		else if (data->ChooseCount == 3)
 		{
 			if (!data->isUp && !data->isDown)
 			{
@@ -574,10 +579,10 @@ void render_Extra(void)
 {
 	SceneData* data = (SceneData*)g_Scene.Data;
 	SDL_Color color = { .r = 255,.b = 255,.g = 255 };
-	
+
 	//이미지 출력
 	Renderer_DrawImage(&data->BackGround, 0, 0);
-	
+
 	//텍스트 출력
 	if (data->isSkip)
 	{
@@ -607,7 +612,7 @@ void render_Extra(void)
 	{
 		Renderer_DrawTextSolid(&data->Choose_3, 995, 850, color);
 	}
-	
+
 	//커서 출력
 	if (data->ChooseCount == 1)
 	{
@@ -648,14 +653,11 @@ void release_Extra(void)
 	Text_FreeText(&data->Choose_2);
 	Text_FreeText(&data->Choose_3);
 	Text_FreeText(&data->Coursur);
-	for (int32 i = 0; i <20; i++)
+	for (int32 i = 0; i < 20; i++)
 	{
 		Text_FreeText(&data->GuideLine[i]);
 	}
-	if (parsing_dt.sceneData[Index].SOUND_NAME != '\0')
-	{
-		Audio_FreeMusic(&data->Main_BGM);
-	}
+
 	Image_FreeImage(&data->BackGround);
 	SafeFree(g_Scene.Data);
 }
@@ -846,6 +848,42 @@ void release_MainScreen(void)
 
 #pragma endregion
 
+#pragma region TitleScene
+typedef struct TitleSceneData
+{
+	Image	BackGround;
+} TitleSceneData;
+
+void init_TitleScene(void)
+{
+	g_Scene.Data = malloc(sizeof(TitleSceneData));
+	memset(g_Scene.Data, 0, sizeof(TitleSceneData));
+	TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
+
+	Image_LoadImage(&data->BackGround, "main_title.png");
+}
+
+void update_TitleScene(void)
+{
+	if (Input_GetKeyDown(VK_SPACE))
+	{
+		Scene_SetNextScene(SCENE_MAINSCREEN);
+	}
+}
+
+void render_TitleScene(void)
+{
+	TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
+
+	Renderer_DrawImage(&data->BackGround, 0, 0);
+}
+
+void release_TitleScene(void)
+{
+	TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
+	Image_FreeImage(&data->BackGround);
+}
+#pragma endregion
 
 bool Scene_IsSetNextScene(void)
 {
@@ -877,8 +915,7 @@ void Scene_Change(void)
 	}
 
 	switch (s_nextScene)
-	{
-	/*
+	{/*
 	case SCENE_TITLE:
 		g_Scene.Init = init_title;
 		g_Scene.Update = update_title;
@@ -890,8 +927,7 @@ void Scene_Change(void)
 		g_Scene.Update = update_main;
 		g_Scene.Render = render_main;
 		g_Scene.Release = release_main;
-		break;
-	*/
+		break;*/
 	case SCENE_EXTRA:
 		g_Scene.Init = init_Extra;
 		g_Scene.Update = update_Extra;
@@ -903,6 +939,12 @@ void Scene_Change(void)
 		g_Scene.Update = update_MainScreen;
 		g_Scene.Render = render_MainScreen;
 		g_Scene.Release = release_MainScreen;
+		break;
+	case SCENE_TITLESCENE:
+		g_Scene.Init = init_TitleScene;
+		g_Scene.Update = update_TitleScene;
+		g_Scene.Render = render_TitleScene;
+		g_Scene.Release = release_TitleScene;
 		break;
 	}
 

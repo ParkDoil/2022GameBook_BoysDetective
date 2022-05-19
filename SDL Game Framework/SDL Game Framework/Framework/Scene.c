@@ -31,8 +31,10 @@ void init_title(void)
 
 	TitleSceneData* Data = (TitleSceneData*)g_Scene.Data;
 
-	Text_CreateText(&Data->TitleText, "MaruBuri-Light.ttf", 21, parsing_dt.sceneData[1].TEXT, wcslen(parsing_dt.sceneData[0].TEXT));
-	Audio_LoadMusic(&Data->TitleMusic, "powerful.mp3");
+	char bgm[] = "powerful.mp3";
+
+	Text_CreateText(&Data->TitleText, "MaruBuri-Light.ttf", 21, parsing_dt.sceneData[2].TEXT, wcslen(parsing_dt.sceneData[0].TEXT));
+	Audio_LoadMusic(&Data->TitleMusic, bgm);
 	Audio_Play(&Data->TitleMusic, INFINITY_LOOP);
 }
 

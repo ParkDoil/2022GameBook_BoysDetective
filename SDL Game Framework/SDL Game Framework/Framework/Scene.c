@@ -3,6 +3,10 @@
 
 #include "Framework.h"
 
+#define SOLID 0
+#define SHADED 1
+#define BLENDED 2
+
 Scene g_Scene;
 Parsing parsing_dt;
 
@@ -13,9 +17,6 @@ static int32 Index = 0;
 /*
 #pragma region TitleScene
 
-#define SOLID 0
-#define SHADED 1
-#define BLENDED 2
 
 const wchar_t* str[] = {
 	L"여기는 타이틀씬입니다. 텍스트와 관련된 여러가지를 테스트해봅시다.",
@@ -432,17 +433,17 @@ void init_Extra(void)
 	// 선택지 처리부
 	if (*(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_1) != L'\0')
 	{
-		Text_CreateText(&data->Choose_1, "GmarketSansTTFBold.ttf", 22, parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_1, wcslen(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_1));
+		Text_CreateText(&data->Choose_1, "GmarketSansTTFLight.ttf", 22, parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_1, wcslen(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_1));
 		data->ChooseCount++;
 	}
 	if (*(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_2) != L'\0')
 	{
-		Text_CreateText(&data->Choose_2, "GmarketSansTTFBold.ttf", 22, parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_2, wcslen(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_2));
+		Text_CreateText(&data->Choose_2, "GmarketSansTTFLight.ttf", 22, parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_2, wcslen(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_2));
 		data->ChooseCount++;
 	}
 	if (*(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_3) != L'\0')
 	{
-		Text_CreateText(&data->Choose_3, "GmarketSansTTFBold.ttf", 22, parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_3, wcslen(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_3));
+		Text_CreateText(&data->Choose_3, "GmarketSansTTFLight.ttf", 22, parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_3, wcslen(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_3));
 		data->ChooseCount++;
 	}
 	// 이미지 처리부
@@ -578,7 +579,8 @@ void update_Extra(void)
 void render_Extra(void)
 {
 	SceneData* data = (SceneData*)g_Scene.Data;
-	SDL_Color color = { .r = 255,.b = 255,.g = 255 };
+	SDL_Color bg = { .r = 0, .g = 0, .b = 0 };
+	SDL_Color fg = { .r = 255, .g = 255, .b = 255 };
 
 	//이미지 출력
 	Renderer_DrawImage(&data->BackGround, 0, 0);
@@ -588,60 +590,60 @@ void render_Extra(void)
 	{
 		for (int32 i = 0; i < data->LineCount; i++)
 		{
-			Renderer_DrawTextSolid(&data->GuideLine[i], 975, 75 + (35 * i), color);
+			Renderer_DrawTextShaded(&data->GuideLine[i], 975, 75 + (35 * i), fg, bg);
 		}
 	}
 	else
 	{
 		for (int32 i = 0; i < data->delayCount; i++)
 		{
-			Renderer_DrawTextSolid(&data->GuideLine[i], 975, 75 + (35 * i), color);
+			Renderer_DrawTextShaded(&data->GuideLine[i], 975, 75 + (35 * i), fg, bg);
 		}
 	}
 
 	//선택지 출력
 	if (*(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_1) != L"")
 	{
-		Renderer_DrawTextSolid(&data->Choose_1, 995, 790, color);
+		Renderer_DrawTextShaded(&data->Choose_1, 1010, 790, fg, bg);
 	}
 	if (*(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_2) != L"")
 	{
-		Renderer_DrawTextSolid(&data->Choose_2, 995, 820, color);
+		Renderer_DrawTextShaded(&data->Choose_2, 1010, 820, fg, bg);
 	}
 	if (*(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_3) != L"")
 	{
-		Renderer_DrawTextSolid(&data->Choose_3, 995, 850, color);
+		Renderer_DrawTextShaded(&data->Choose_3, 1010, 850, fg, bg);
 	}
 
 	//커서 출력
 	if (data->ChooseCount == 1)
 	{
-		Renderer_DrawTextSolid(&data->Coursur, 965, 790, color);
+		Renderer_DrawTextShaded(&data->Coursur, 975, 790, fg, bg);
 	}
 	if (data->ChooseCount == 2)
 	{
 		if (data->isUp)
 		{
-			Renderer_DrawTextSolid(&data->Coursur, 965, 790, color);
+			Renderer_DrawTextShaded(&data->Coursur, 975, 790, fg, bg);
 		}
 		else
 		{
-			Renderer_DrawTextSolid(&data->Coursur, 965, 820, color);
+			Renderer_DrawTextShaded(&data->Coursur, 975, 820, fg, bg);
 		}
 	}
 	if (data->ChooseCount == 3)
 	{
 		if (data->isUp)
 		{
-			Renderer_DrawTextSolid(&data->Coursur, 965, 790, color);
+			Renderer_DrawTextShaded(&data->Coursur, 975, 790, fg, bg);
 		}
 		else if (!data->isUp && !data->isDown)
 		{
-			Renderer_DrawTextSolid(&data->Coursur, 965, 820, color);
+			Renderer_DrawTextShaded(&data->Coursur, 975, 820, fg, bg);
 		}
 		else
 		{
-			Renderer_DrawTextSolid(&data->Coursur, 965, 850, color);
+			Renderer_DrawTextShaded(&data->Coursur, 975, 850, fg, bg);
 		}
 	}
 }
@@ -758,11 +760,12 @@ void update_MainScreen(void)
 
 void render_MainScreen(void)
 {
-	SDL_Color color = { .r = 255,.b = 255,.g = 255 };
+	SDL_Color bg = { .r = 0, .g = 0, .b = 0 };
+	SDL_Color fg = { .r = 255, .g = 255, .b = 255 };
 	MainScreenData* data = (MainScreenData*)g_Scene.Data;
 	for (int32 i = 0; i < data->RoadingCheck; i++)
 	{
-		Renderer_DrawTextSolid(&data->RoadingText[i], 30, 30, color);
+		Renderer_DrawTextShaded(&data->RoadingText[i], 30, 30 , fg, bg);
 	}
 	if (data->NextText == 0 && data->RoadingCheck == 3)
 	{
@@ -770,7 +773,7 @@ void render_MainScreen(void)
 	}
 	if (data->NextText > 0)
 	{
-		Renderer_DrawTextSolid(&data->Recording, 30, 70, color);
+		Renderer_DrawTextShaded(&data->Recording, 30, 70, fg, bg);
 		if (data->NextText == 1)
 		{
 			data->isNext = true;
@@ -778,7 +781,7 @@ void render_MainScreen(void)
 	}
 	if (data->NextText > 1)
 	{
-		Renderer_DrawTextSolid(&data->Date, 700, 340, color);
+		Renderer_DrawTextShaded(&data->Date, 700, 340, fg, bg);
 		if (data->NextText == 2)
 		{
 			data->isNext = true;
@@ -786,7 +789,7 @@ void render_MainScreen(void)
 	}
 	if (data->NextText > 2)
 	{
-		Renderer_DrawTextSolid(&data->Rocation, 660, 370, color);
+		Renderer_DrawTextShaded(&data->Rocation, 660, 370, fg, bg);
 		if (data->NextText == 3)
 		{
 			data->isNext = true;
@@ -794,7 +797,7 @@ void render_MainScreen(void)
 	}
 	if (data->NextText > 3)
 	{
-		Renderer_DrawTextSolid(&data->Infomation, 50, 400, color);
+		Renderer_DrawTextShaded(&data->Infomation, 50, 400, fg, bg);
 		if (data->NextText == 4)
 		{
 			data->isNext = true;
@@ -804,7 +807,7 @@ void render_MainScreen(void)
 	{
 		for (int32 i = 0; i < data->ConformCheck; i++)
 		{
-			Renderer_DrawTextSolid(&data->RoadConform[i], 60, 520, color);
+			Renderer_DrawTextShaded(&data->RoadConform[i], 60, 520, fg, bg);
 			
 		}
 		if (data->NextText == 5 && data->ConformCheck == 4)
@@ -816,7 +819,7 @@ void render_MainScreen(void)
 	{
 		for (int32 i = 0; i < data->BioLinkCheck; i++)
 		{
-			Renderer_DrawTextSolid(&data->BioLink[i], 800, 600, color);
+			Renderer_DrawTextShaded(&data->BioLink[i], 800, 600, fg, bg);
 		}
 		if (data->NextText == 6 && data->BioLinkCheck == 3)
 		{
@@ -825,7 +828,7 @@ void render_MainScreen(void)
 	}
 	if (data->NextText > 6)
 	{
-		Renderer_DrawTextSolid(&data->BrainLink, 1020, 600, color);
+		Renderer_DrawTextShaded(&data->BrainLink, 1020, 600, fg, bg);
 		if (data->NextText == 7)
 		{
 			data->isNext = true;

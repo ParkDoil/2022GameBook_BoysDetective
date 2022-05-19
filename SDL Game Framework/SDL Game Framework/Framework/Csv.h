@@ -45,12 +45,13 @@ typedef struct CsvItem
 
 typedef struct CsvFile
 {
-    int			ColumnCount;
-    int			RowCount;
+    int         ColumnCount;
+    int         RowCount;
     CsvItem* Items[MAXIMUM_ROW];
 } CsvFile;
 
 void CreateCsvFile(CsvFile* csvFile, const char* filename);
-int			ParseToInt(const CsvItem item);
+int         ParseToInt(const CsvItem item);
 char* ParseToAscii(const CsvItem item);
 wchar_t* ParseToUnicode(char* str);
+void FreeCsvFile(CsvFile* csvFile);

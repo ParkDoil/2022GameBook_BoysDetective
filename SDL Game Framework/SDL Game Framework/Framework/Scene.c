@@ -12,6 +12,7 @@ Parsing parsing_dt;
 
 static ESceneType s_nextScene = SCENE_NULL;
 static int32 Index = 0;
+static float Volume = 1.0f;
 
 // titleScene
 /*
@@ -367,20 +368,20 @@ void release_main(void)
 
 typedef struct SceneData
 {
-	int32      nowIndex;
-	int32      ChooseCount;
-	int32      LineCount;
-	int32      delayCount;
-	Image      BackGround;
-	Music      Main_BGM;
-	Text      GuideLine[20];
-	Text      Choose_1;
-	Text      Choose_2;
-	Text      Choose_3;
-	Text      Coursur;
-	bool      isUp;
-	bool      isDown;
-	bool      isSkip;
+	int32		nowIndex;
+	int32		ChooseCount;
+	int32		LineCount;
+	int32		delayCount;
+	Image       BackGround;
+	Music       Main_BGM;
+	Text        GuideLine[20];
+	Text		Choose_1;
+	Text		Choose_2;
+	Text		Choose_3;
+	Text		Coursur;
+	bool		isUp;
+	bool		isDown;
+	bool		isSkip;
 } SceneData;
 
 void init_Extra(void)
@@ -393,6 +394,7 @@ void init_Extra(void)
 	data->ChooseCount = 0;
 	data->LineCount = 1;
 	data->delayCount = 0;
+
 
 	Text_CreateText(&data->Coursur, "GmarketSansTTFLight.ttf", 24, L" ▶", wcslen(L" ▶")); //커서 생성
 
@@ -454,8 +456,7 @@ void init_Extra(void)
 	{
 		Audio_LoadMusic(&data->Main_BGM, parsing_dt.sceneData[data->nowIndex].SOUND_NAME);
 		Audio_GetVolume();
-		float sound = 1.0f;
-		Audio_SetVolume(sound);
+		Audio_SetVolume(Volume);
 		Audio_Play(&data->Main_BGM, INFINITY_LOOP);
 	}
 
@@ -471,6 +472,18 @@ void update_Extra(void)
 	static float elapsedTime;
 	elapsedTime += Timer_GetDeltaTime();
 
+	// 볼륨 처리부
+	if (Input_GetKey('1'))
+	{
+		Volume -= 0.01f;
+		Audio_SetVolume(Volume);
+	}
+
+	if (Input_GetKey('2'))
+	{
+		Volume += 0.01f;
+		Audio_SetVolume(Volume);
+	}
 	// 텍스트 연출 지연부
 	if (elapsedTime >= 0.75f)
 	{

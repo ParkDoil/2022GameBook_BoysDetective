@@ -680,6 +680,7 @@ typedef struct MainScreenData
 	int32	BioLinkCheck;
 	int32	NextText;
 	bool	isNext;
+	Music	BGM;
 } MainScreenData;
 
 void init_MainScreen(void)
@@ -708,6 +709,12 @@ void init_MainScreen(void)
 	data->RoadingCheck = 1;
 	data->NextText = 0;
 	data->isNext = false;
+
+	Audio_LoadMusic(&data->BGM, "prologue.mp3");
+	Audio_GetVolume();
+	float sound = 1.0f;
+	Audio_SetVolume(sound);
+	Audio_Play(&data->BGM, INFINITY_LOOP);
 }
 
 void update_MainScreen(void)
@@ -842,6 +849,7 @@ void release_MainScreen(void)
 	Text_FreeText(&data->Rocation);
 	Text_FreeText(&data->Infomation);
 	Text_FreeText(&data->BrainLink);
+	Audio_FreeMusic(&data->BGM);
 
 	SafeFree(g_Scene.Data);
 }
@@ -852,6 +860,7 @@ void release_MainScreen(void)
 typedef struct TitleSceneData
 {
 	Image	BackGround;
+	Music	BGM;
 } TitleSceneData;
 
 void init_TitleScene(void)
@@ -861,6 +870,12 @@ void init_TitleScene(void)
 	TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
 	Image_LoadImage(&data->BackGround, "main_title.png");
+
+	Audio_LoadMusic(&data->BGM, "main.mp3");
+	Audio_GetVolume();
+	float sound = 1.0f;
+	Audio_SetVolume(sound);
+	Audio_Play(&data->BGM, INFINITY_LOOP);
 }
 
 void update_TitleScene(void)
@@ -882,6 +897,7 @@ void release_TitleScene(void)
 {
 	TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 	Image_FreeImage(&data->BackGround);
+	Audio_FreeMusic(&data->BGM);
 }
 #pragma endregion
 

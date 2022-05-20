@@ -6,6 +6,7 @@
 #define SOLID 0
 #define SHADED 1
 #define BLENDED 2
+#define SECOND 2
 
 Scene g_Scene;
 Parsing parsing_dt;
@@ -13,6 +14,7 @@ Parsing parsing_dt;
 static ESceneType s_nextScene = SCENE_NULL;
 static int32 Index = 0;
 static float Volume = 1.0f;
+static float TextDelay = 1.5f;
 
 // titleScene
 /*
@@ -368,20 +370,33 @@ void release_main(void)
 
 typedef struct SceneData
 {
-	int32		nowIndex;
-	int32		ChooseCount;
-	int32		LineCount;
-	int32		delayCount;
-	Image       BackGround;
-	Music       Main_BGM;
-	Text        GuideLine[20];
-	Text		Choose_1;
-	Text		Choose_2;
-	Text		Choose_3;
-	Text		Coursur;
-	bool		isUp;
-	bool		isDown;
-	bool		isSkip;
+	int32			nowIndex;
+	int32			ChooseCount;
+	int32			LineCount;
+	int32			delayCount;
+	int32			blackoutAlpha;
+	int32			FontSize;
+	int32			TextAlpha;
+	float			EffectSoundDelay;
+	float			elapsedTime;
+	float			EffectTime;
+	SoundEffect		EffectSound;
+	Image			BackGround;
+	Image			BlackOutImage;
+	Music			Main_BGM;
+	Text			GuideLine[20];
+	Text			Choose_1;
+	Text			Choose_2;
+	Text			Choose_3;
+	Text			Coursur;
+	bool			isChoice_1;
+	bool			isChoice_2;
+	bool			isChoice_3;
+	bool			isUp;
+	bool			isDown;
+	bool			isSkip;
+	bool			goNextScene;
+	bool			isPlayedEffetSound;
 } SceneData;
 
 void init_Extra(void)
@@ -391,12 +406,28 @@ void init_Extra(void)
 	SceneData* data = (SceneData*)g_Scene.Data;
 
 	data->nowIndex = Index;
+
 	data->ChooseCount = 0;
 	data->LineCount = 1;
 	data->delayCount = 0;
+	data->FontSize = 22;
+	
+	data->elapsedTime = 0.0f;
+	data->EffectTime = 0.0f;
 
+	data->EffectSoundDelay = parsing_dt.sceneData[data->nowIndex].EFFECT_COUNT;
+	if (parsing_dt.sceneData[data->nowIndex].IMG_OUTPUT_STYLE == 2)
+	{
+		data->blackoutAlpha = 255;
+		data->TextAlpha = 0;
+	}
+	else
+	{
+		data->blackoutAlpha = 0;
+		data->TextAlpha = 255;
+	}
 
-	Text_CreateText(&data->Coursur, "GmarketSansTTFLight.ttf", 24, L" ▶", wcslen(L" ▶")); //커서 생성
+	Text_CreateText(&data->Coursur, "Disital.ttf", 24, L" ▶", wcslen(L" ▶")); //커서 생성
 
 	// 개행문자 처리부
 	wchar_t* rawString = parsing_dt.sceneData[data->nowIndex].TEXT;
@@ -435,42 +466,63 @@ void init_Extra(void)
 	// 선택지 처리부
 	if (*(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_1) != L'\0')
 	{
-		Text_CreateText(&data->Choose_1, "GmarketSansTTFLight.ttf", 22, parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_1, wcslen(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_1));
+		Text_CreateText(&data->Choose_1, "GmarketSansTTFLight.ttf", data->FontSize, parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_1, wcslen(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_1));
 		data->ChooseCount++;
 	}
 	if (*(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_2) != L'\0')
 	{
-		Text_CreateText(&data->Choose_2, "GmarketSansTTFLight.ttf", 22, parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_2, wcslen(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_2));
+		Text_CreateText(&data->Choose_2, "GmarketSansTTFLight.ttf", data->FontSize, parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_2, wcslen(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_2));
 		data->ChooseCount++;
 	}
 	if (*(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_3) != L'\0')
 	{
-		Text_CreateText(&data->Choose_3, "GmarketSansTTFLight.ttf", 22, parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_3, wcslen(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_3));
+		Text_CreateText(&data->Choose_3, "GmarketSansTTFLight.ttf", data->FontSize, parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_3, wcslen(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_3));
 		data->ChooseCount++;
 	}
 	// 이미지 처리부
 	Image_LoadImage(&data->BackGround, parsing_dt.sceneData[data->nowIndex].MAIN_IMAGE);
+	Image_LoadImage(&data->BlackOutImage, "blackout.png");
 
-	////사운드
-	if (parsing_dt.sceneData[data->nowIndex].SOUND_NAME != NULL)
+	//사운드
+	if (*parsing_dt.sceneData[data->nowIndex].SOUND_NAME != NULL)
 	{
 		Audio_LoadMusic(&data->Main_BGM, parsing_dt.sceneData[data->nowIndex].SOUND_NAME);
 		Audio_GetVolume();
 		Audio_SetVolume(Volume);
 		Audio_Play(&data->Main_BGM, INFINITY_LOOP);
 	}
+	if (*parsing_dt.sceneData[data->nowIndex].EFFECT_SOUND_NAME != NULL)
+	{
+		Audio_LoadSoundEffect(&data->EffectSound, parsing_dt.sceneData[data->nowIndex].EFFECT_SOUND_NAME);
+		Audio_SetEffectVolume(&data->EffectSound, 0.5f);
+	}
 
 	data->isUp = true;
 	data->isDown = false;
 	data->isSkip = false;
+	data->goNextScene = false;
+	data->isChoice_1 = true;
+	data->isChoice_2 = false;
+	data->isChoice_3 = false;
+	data->isPlayedEffetSound = false;
 }
 
 void update_Extra(void)
 {
 	SceneData* data = (SceneData*)g_Scene.Data;
 
-	static float elapsedTime;
-	elapsedTime += Timer_GetDeltaTime();
+	data->elapsedTime += Timer_GetDeltaTime();
+	data->EffectTime += Timer_GetDeltaTime();
+
+	if (parsing_dt.sceneData[data->nowIndex].IMG_OUTPUT_STYLE == 2)
+	{
+		if (data->TextAlpha < 255 && data->blackoutAlpha > 0)
+		{
+			data->TextAlpha += 5;
+			data->blackoutAlpha -= 5;
+
+		}
+	}
 
 	// 볼륨 처리부
 	if (Input_GetKey('1'))
@@ -478,21 +530,46 @@ void update_Extra(void)
 		Volume -= 0.01f;
 		Audio_SetVolume(Volume);
 	}
-
 	if (Input_GetKey('2'))
 	{
 		Volume += 0.01f;
 		Audio_SetVolume(Volume);
 	}
+	if (Input_GetKeyDown('3')) //음소거
+	{
+		Volume = 0.0f;
+		Audio_SetVolume(Volume);
+	}
+
+	// 이펙트 사운드 처리부
+	if (!data->isPlayedEffetSound)
+	{
+		if (data->EffectTime >= data->EffectSoundDelay)
+		{
+			Audio_PlaySoundEffect(&data->EffectSound, 0);
+			data->isPlayedEffetSound = true;
+		}
+	}
+	
+
 	// 텍스트 연출 지연부
-	if (elapsedTime >= 0.75f)
+	if (data->elapsedTime >= TextDelay)
 	{
 		if (data->delayCount <= data->LineCount)
 		{
 			data->delayCount++;
 		}
-		elapsedTime = 0;
+		data->elapsedTime = 0;
 	}
+	if (Input_GetKey('9'))
+	{
+		TextDelay += 0.05f;
+	}
+	if (Input_GetKey('0'))
+	{
+		TextDelay -= 0.05f;
+	}
+
 
 	if (Input_GetKeyDown(VK_RETURN))
 	{
@@ -507,19 +584,16 @@ void update_Extra(void)
 		if (data->ChooseCount == 1)
 		{
 			Index = (parsing_dt.sceneData[data->nowIndex].CHOOSE_1_NEXT_SCENE) - 1;
-			Scene_SetNextScene(SCENE_EXTRA);
 		}
 		if (data->ChooseCount == 2)
 		{
 			if (data->isUp)
 			{
 				Index = (parsing_dt.sceneData[data->nowIndex].CHOOSE_1_NEXT_SCENE) - 1;
-				Scene_SetNextScene(SCENE_EXTRA);
 			}
 			if (!data->isUp)
 			{
 				Index = (parsing_dt.sceneData[data->nowIndex].CHOOSE_2_NEXT_SCENE) - 1;
-				Scene_SetNextScene(SCENE_EXTRA);
 			}
 		}
 		if (data->ChooseCount == 3)
@@ -527,20 +601,41 @@ void update_Extra(void)
 			if (data->isUp)
 			{
 				Index = (parsing_dt.sceneData[data->nowIndex].CHOOSE_1_NEXT_SCENE) - 1;
-				Scene_SetNextScene(SCENE_EXTRA);
 			}
 			if (!data->isUp && !data->isDown)
 			{
 				Index = (parsing_dt.sceneData[data->nowIndex].CHOOSE_2_NEXT_SCENE) - 1;
-				Scene_SetNextScene(SCENE_EXTRA);
 			}
 			if (data->isDown)
 			{
 				Index = (parsing_dt.sceneData[data->nowIndex].CHOOSE_3_NEXT_SCENE) - 1;
+			}
+		}
+		data->goNextScene = true;
+	}
+	if (data->goNextScene)
+	{
+		if (parsing_dt.sceneData[data->nowIndex].IMG_OUTPUT_STYLE == 1)
+		{
+			if (data->blackoutAlpha < 255 && data->TextAlpha > 0)
+			{
+				data->blackoutAlpha += 5;
+				data->TextAlpha -= 5;
+				Text_CreateText(&data->Choose_1, "GmarketSansTTFLight.ttf", 0, L"", wcslen(L""));
+				Text_CreateText(&data->Choose_2, "GmarketSansTTFLight.ttf", 0, L"", wcslen(L""));
+				Text_CreateText(&data->Choose_3, "GmarketSansTTFLight.ttf", 0, L"", wcslen(L""));
+			}
+			else
+			{
 				Scene_SetNextScene(SCENE_EXTRA);
 			}
 		}
+		else
+		{
+			Scene_SetNextScene(SCENE_EXTRA);
+		}
 	}
+
 
 	// 선택지 위아래 키보드 입력 처리부
 	if (Input_GetKeyDown(VK_UP))
@@ -550,6 +645,9 @@ void update_Extra(void)
 			if (!data->isUp)
 			{
 				data->isUp = !data->isUp;
+				data->isChoice_1 = true;
+				data->isChoice_2 = false;
+
 			}
 		}
 		else if (data->ChooseCount == 3)
@@ -557,10 +655,14 @@ void update_Extra(void)
 			if (!data->isUp && !data->isDown)
 			{
 				data->isUp = !data->isUp;
+				data->isChoice_1 = true;
+				data->isChoice_2 = false;
 			}
 			else if (!data->isUp && data->isDown)
 			{
 				data->isDown = !data->isDown;
+				data->isChoice_1 = false;
+				data->isChoice_2 = true;
 			}
 		}
 	}
@@ -571,6 +673,8 @@ void update_Extra(void)
 			if (data->isUp)
 			{
 				data->isUp = !data->isUp;
+				data->isChoice_1 = false;
+				data->isChoice_2 = true;
 			}
 		}
 		else if (data->ChooseCount == 3)
@@ -578,85 +682,134 @@ void update_Extra(void)
 			if (data->isUp && !data->isDown)
 			{
 				data->isUp = !data->isUp;
+				data->isChoice_2 = true;
+				data->isChoice_3 = false;
 			}
 			else if (!data->isUp && !data->isDown)
 			{
 				data->isDown = !data->isDown;
+				data->isChoice_2 = false;
+				data->isChoice_3 = true;
 			}
 		}
 	}
-
 
 }
 
 void render_Extra(void)
 {
 	SceneData* data = (SceneData*)g_Scene.Data;
-	SDL_Color bg = { .r = 0, .g = 0, .b = 0 };
-	SDL_Color fg = { .r = 255, .g = 255, .b = 255 };
+	SDL_Color Text = { .r = 255, .g = 255, .b = 255, .a = data->TextAlpha };
+	SDL_Color main = { .r = 255, .g = 255, .b = 255, .a = 255 };
+	SDL_Color notchoice = { .r = 255, .g = 255, .b = 255, .a = 90 };
 
 	//이미지 출력
 	Renderer_DrawImage(&data->BackGround, 0, 0);
+	Image_SetAlphaValue(&data->BlackOutImage, data->blackoutAlpha);
+	Renderer_DrawImage(&data->BlackOutImage, 0, 0);
 
+	
 	//텍스트 출력
 	if (data->isSkip)
 	{
 		for (int32 i = 0; i < data->LineCount; i++)
 		{
-			Renderer_DrawTextShaded(&data->GuideLine[i], 975, 75 + (35 * i), fg, bg);
+			Renderer_DrawTextBlended(&data->GuideLine[i], 975, 75 + (35 * i), Text);
 		}
 	}
 	else
 	{
 		for (int32 i = 0; i < data->delayCount; i++)
 		{
-			Renderer_DrawTextShaded(&data->GuideLine[i], 975, 75 + (35 * i), fg, bg);
+			Renderer_DrawTextBlended(&data->GuideLine[i], 975, 75 + (35 * i), Text);
 		}
 	}
-
-	//선택지 출력
-	if (*(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_1) != L"")
-	{
-		Renderer_DrawTextShaded(&data->Choose_1, 1010, 790, fg, bg);
-	}
-	if (*(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_2) != L"")
-	{
-		Renderer_DrawTextShaded(&data->Choose_2, 1010, 820, fg, bg);
-	}
-	if (*(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_3) != L"")
-	{
-		Renderer_DrawTextShaded(&data->Choose_3, 1010, 850, fg, bg);
-	}
-
 	//커서 출력
 	if (data->ChooseCount == 1)
 	{
-		Renderer_DrawTextShaded(&data->Coursur, 975, 790, fg, bg);
+		Renderer_DrawTextBlended(&data->Coursur, 975, 790, Text);
+		Text_SetFontStyle(&data->Choose_1, FS_UNDERLINE);
 	}
 	if (data->ChooseCount == 2)
 	{
 		if (data->isUp)
 		{
-			Renderer_DrawTextShaded(&data->Coursur, 975, 790, fg, bg);
+			Renderer_DrawTextBlended(&data->Coursur, 975, 790, Text);
+			Text_SetFontStyle(&data->Choose_1, FS_UNDERLINE);
+			Text_SetFontStyle(&data->Choose_2, FS_NORMAL);
 		}
 		else
 		{
-			Renderer_DrawTextShaded(&data->Coursur, 975, 820, fg, bg);
+			Renderer_DrawTextBlended(&data->Coursur, 975, 820, Text);
+			Text_SetFontStyle(&data->Choose_1, FS_NORMAL);
+			Text_SetFontStyle(&data->Choose_2, FS_UNDERLINE);
 		}
 	}
 	if (data->ChooseCount == 3)
 	{
 		if (data->isUp)
 		{
-			Renderer_DrawTextShaded(&data->Coursur, 975, 790, fg, bg);
+			Renderer_DrawTextBlended(&data->Coursur, 975, 790, Text);
+			Text_SetFontStyle(&data->Choose_1, FS_UNDERLINE);
+			Text_SetFontStyle(&data->Choose_2, FS_NORMAL);
+			Text_SetFontStyle(&data->Choose_3, FS_NORMAL);
 		}
 		else if (!data->isUp && !data->isDown)
 		{
-			Renderer_DrawTextShaded(&data->Coursur, 975, 820, fg, bg);
+			Renderer_DrawTextBlended(&data->Coursur, 975, 820, Text);
+			Text_SetFontStyle(&data->Choose_1, FS_NORMAL);
+			Text_SetFontStyle(&data->Choose_2, FS_UNDERLINE);
+			Text_SetFontStyle(&data->Choose_3, FS_NORMAL);
 		}
 		else
 		{
-			Renderer_DrawTextShaded(&data->Coursur, 975, 850, fg, bg);
+			Renderer_DrawTextBlended(&data->Coursur, 975, 850, Text);
+			Text_SetFontStyle(&data->Choose_1, FS_NORMAL);
+			Text_SetFontStyle(&data->Choose_2, FS_NORMAL);
+			Text_SetFontStyle(&data->Choose_3, FS_UNDERLINE);
+		}
+	}
+
+	//선택지 출력
+
+	if (data->ChooseCount == 1)
+	{
+		Renderer_DrawTextBlended(&data->Choose_1, 1010, 790, main);
+	}
+	else
+	{
+		if (*(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_1) != L"")
+		{
+			if (data->isChoice_1)
+			{
+				Renderer_DrawTextBlended(&data->Choose_1, 1010, 790, main);
+			}
+			else
+			{
+				Renderer_DrawTextBlended(&data->Choose_1, 1010, 790, notchoice);
+			}
+		}
+		if (*(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_2) != L"")
+		{
+			if (data->isChoice_2)
+			{
+				Renderer_DrawTextBlended(&data->Choose_2, 1010, 820, main);
+			}
+			else
+			{
+				Renderer_DrawTextBlended(&data->Choose_2, 1010, 820, notchoice);
+			}
+		}
+		if (*(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_3) != L"")
+		{
+			if (data->isChoice_3)
+			{
+				Renderer_DrawTextBlended(&data->Choose_3, 1010, 850, main);
+			}
+			else
+			{
+				Renderer_DrawTextBlended(&data->Choose_3, 1010, 850, notchoice);
+			}
 		}
 	}
 }
@@ -668,12 +821,20 @@ void release_Extra(void)
 	Text_FreeText(&data->Choose_2);
 	Text_FreeText(&data->Choose_3);
 	Text_FreeText(&data->Coursur);
+
 	for (int32 i = 0; i < 20; i++)
 	{
 		Text_FreeText(&data->GuideLine[i]);
 	}
 
+	if (*parsing_dt.sceneData[Index].SOUND_NAME != NULL)
+	{
+		Audio_FreeMusic(&data->Main_BGM);
+	}
+	Audio_FreeSoundEffect(&data->EffectSound);
 	Image_FreeImage(&data->BackGround);
+	Image_FreeImage(&data->BlackOutImage);
+
 	SafeFree(g_Scene.Data);
 }
 
@@ -686,6 +847,7 @@ typedef struct MainScreenData
 	Text	Recording;
 	Text	Date;
 	Text	Rocation;
+	Text	Hanja;
 	Text	Infomation;
 	Text	RoadConform[4];
 	Text	BioLink[3];
@@ -704,21 +866,22 @@ void init_MainScreen(void)
 	memset(g_Scene.Data, 0, sizeof(MainScreenData));
 	MainScreenData* data = (MainScreenData*)g_Scene.Data;
 
-	Text_CreateText(&data->RoadingText[0], "12LotteMartHappyLight.ttf", 18, L"바이오 칩셋 로딩중 .", wcslen(L"바이오 칩셋 로딩중 ."));
-	Text_CreateText(&data->RoadingText[1], "12LotteMartHappyLight.ttf", 18, L"바이오 칩셋 로딩중 . .", wcslen(L"바이오 칩셋 로딩중 . ."));
-	Text_CreateText(&data->RoadingText[2], "12LotteMartHappyLight.ttf", 18, L"바이오 칩셋 로딩중 . . .", wcslen(L"바이오 칩셋 로딩중 . . ."));
-	Text_CreateText(&data->Recording, "12LotteMartHappyLight.ttf", 18, L"기록자 - [타카네 준]", wcslen(L"기록자 - [타카네 준]"));
-	Text_CreateText(&data->Date, "12LotteMartHappyLight.ttf", 18, L"2067년 8 월 12 일", wcslen(L"2067년 8 월 12 일"));
-	Text_CreateText(&data->Rocation, "12LotteMartHappyLight.ttf", 18, L"위치 좌표 - [東京 , 日本]", wcslen(L"위치 좌표 - [東京 , 日本]"));
-	Text_CreateText(&data->Infomation, "12LotteMartHappyLight.ttf", 18, L"본 칩셋은 내각관방 직할 내각정보조사실 존치기록물 입니다─", wcslen(L"본 칩셋은 내각관방 직할 내각정보조사실 존치기록물 입니다─"));
-	Text_CreateText(&data->RoadConform[0], "12LotteMartHappyLight.ttf", 18, L"로드 컨펌중 ─", wcslen(L"로드 컨펌중 ─"));
-	Text_CreateText(&data->RoadConform[1], "12LotteMartHappyLight.ttf", 18, L"로드 컨펌중 ─ ─", wcslen(L"로드 컨펌중 ─ ─"));
-	Text_CreateText(&data->RoadConform[2], "12LotteMartHappyLight.ttf", 18, L"로드 컨펌중 ─ ─ ─", wcslen(L"로드 컨펌중 ─ ─ ─"));
-	Text_CreateText(&data->RoadConform[3], "12LotteMartHappyLight.ttf", 18, L"로드 컨펌중 ─ ─ ─ ─", wcslen(L"로드 컨펌중 ─ ─ ─ ─"));
-	Text_CreateText(&data->BioLink[0], "12LotteMartHappyLight.ttf", 18, L"바이오 링크 완료 .", wcslen(L"바이오 링크 완료 ."));
-	Text_CreateText(&data->BioLink[1], "12LotteMartHappyLight.ttf", 18, L"바이오 링크 완료 . .", wcslen(L"바이오 링크 완료 . ."));
-	Text_CreateText(&data->BioLink[2], "12LotteMartHappyLight.ttf", 18, L"바이오 링크 완료 . . .", wcslen(L"바이오 링크 완료 . . ."));
-	Text_CreateText(&data->BrainLink, "12LotteMartHappyLight.ttf", 18, L"대뇌 감정 링크 확인", wcslen(L"대뇌 감정 링크 확인"));
+	Text_CreateText(&data->RoadingText[0], "Disital.ttf", 24, L"바이오 칩셋 로딩중 .", wcslen(L"바이오 칩셋 로딩중 ."));
+	Text_CreateText(&data->RoadingText[1], "Disital.ttf", 24, L"바이오 칩셋 로딩중 . .", wcslen(L"바이오 칩셋 로딩중 . ."));
+	Text_CreateText(&data->RoadingText[2], "Disital.ttf", 24, L"바이오 칩셋 로딩중 . . .", wcslen(L"바이오 칩셋 로딩중 . . ."));
+	Text_CreateText(&data->Recording, "Disital.ttf", 24, L"기록자 - [타카네 준]", wcslen(L"기록자 - [타카네 준]"));
+	Text_CreateText(&data->Date, "Disital.ttf", 24, L"2067년 8 월 12 일", wcslen(L"2067년 8 월 12 일"));
+	Text_CreateText(&data->Rocation, "Disital.ttf", 24, L"위치 좌표 - ", wcslen(L"위치 좌표 - "));
+	Text_CreateText(&data->Hanja, "12LotteMartHappyLight.ttf", 22, L"[東京 , 日本]", wcslen(L"[東京 , 日本]"));
+	Text_CreateText(&data->Infomation, "Disital.ttf", 24, L"본 칩셋은 내각관방 직할 내각정보조사실 존치기록물 입니다-", wcslen(L"본 칩셋은 내각관방 직할 내각정보조사실 존치기록물 입니다-"));
+	Text_CreateText(&data->RoadConform[0], "Disital.ttf", 24, L"로드 컨펌중 -", wcslen(L"로드 컨펌중 -"));
+	Text_CreateText(&data->RoadConform[1], "Disital.ttf", 24, L"로드 컨펌중 - -", wcslen(L"로드 컨펌중 - -"));
+	Text_CreateText(&data->RoadConform[2], "Disital.ttf", 24, L"로드 컨펌중 - - -", wcslen(L"로드 컨펌중 - - -"));
+	Text_CreateText(&data->RoadConform[3], "Disital.ttf", 24, L"로드 컨펌중 - - - -", wcslen(L"로드 컨펌중 - - - -"));
+	Text_CreateText(&data->BioLink[0], "Disital.ttf", 24, L"바이오 링크 완료 .", wcslen(L"바이오 링크 완료 ."));
+	Text_CreateText(&data->BioLink[1], "Disital.ttf", 24, L"바이오 링크 완료 . .", wcslen(L"바이오 링크 완료 . ."));
+	Text_CreateText(&data->BioLink[2], "Disital.ttf", 24, L"바이오 링크 완료 . . .", wcslen(L"바이오 링크 완료 . . ."));
+	Text_CreateText(&data->BrainLink, "Disital.ttf", 24, L"대뇌 감정 링크 확인", wcslen(L"대뇌 감정 링크 확인"));
 	data->BioLinkCheck = 0;
 	data->ConformCheck = 1;
 	data->RoadingCheck = 1;
@@ -727,8 +890,7 @@ void init_MainScreen(void)
 
 	Audio_LoadMusic(&data->BGM, "prologue.mp3");
 	Audio_GetVolume();
-	float sound = 1.0f;
-	Audio_SetVolume(sound);
+	Audio_SetVolume(Volume);
 	Audio_Play(&data->BGM, INFINITY_LOOP);
 }
 
@@ -740,7 +902,20 @@ void update_MainScreen(void)
 	static float gotoNextScene;
 	elapsedTime += Timer_GetDeltaTime();
 
-	if (elapsedTime >= 0.65f)
+	// 볼륨 처리부
+	if (Input_GetKey('1'))
+	{
+		Volume -= 0.01f;
+		Audio_SetVolume(Volume);
+	}
+
+	if (Input_GetKey('2'))
+	{
+		Volume += 0.01f;
+		Audio_SetVolume(Volume);
+	}
+
+	if (elapsedTime >= 0.7f)
 	{
 		if (data->RoadingCheck < 3)
 		{
@@ -764,7 +939,7 @@ void update_MainScreen(void)
 	if (data->NextText == 8)
 	{
 		gotoNextScene += Timer_GetDeltaTime();
-		if (gotoNextScene >= 4.0f)
+		if (gotoNextScene >= 3.5f)
 		{
 			Scene_SetNextScene(SCENE_EXTRA);
 		}
@@ -794,7 +969,7 @@ void render_MainScreen(void)
 	}
 	if (data->NextText > 1)
 	{
-		Renderer_DrawTextShaded(&data->Date, 700, 340, fg, bg);
+		Renderer_DrawTextShaded(&data->Date, 770, 430, fg, bg);
 		if (data->NextText == 2)
 		{
 			data->isNext = true;
@@ -802,7 +977,8 @@ void render_MainScreen(void)
 	}
 	if (data->NextText > 2)
 	{
-		Renderer_DrawTextShaded(&data->Rocation, 660, 370, fg, bg);
+		Renderer_DrawTextShaded(&data->Rocation, 770, 470, fg, bg);
+		Renderer_DrawTextShaded(&data->Hanja, 880, 470, fg, bg);
 		if (data->NextText == 3)
 		{
 			data->isNext = true;
@@ -810,7 +986,7 @@ void render_MainScreen(void)
 	}
 	if (data->NextText > 3)
 	{
-		Renderer_DrawTextShaded(&data->Infomation, 50, 400, fg, bg);
+		Renderer_DrawTextShaded(&data->Infomation, 50, 600, fg, bg);
 		if (data->NextText == 4)
 		{
 			data->isNext = true;
@@ -820,7 +996,7 @@ void render_MainScreen(void)
 	{
 		for (int32 i = 0; i < data->ConformCheck; i++)
 		{
-			Renderer_DrawTextShaded(&data->RoadConform[i], 60, 520, fg, bg);
+			Renderer_DrawTextShaded(&data->RoadConform[i], 60, 650, fg, bg);
 			
 		}
 		if (data->NextText == 5 && data->ConformCheck == 4)
@@ -832,7 +1008,7 @@ void render_MainScreen(void)
 	{
 		for (int32 i = 0; i < data->BioLinkCheck; i++)
 		{
-			Renderer_DrawTextShaded(&data->BioLink[i], 800, 600, fg, bg);
+			Renderer_DrawTextShaded(&data->BioLink[i], 940, 750, fg, bg);
 		}
 		if (data->NextText == 6 && data->BioLinkCheck == 3)
 		{
@@ -841,7 +1017,7 @@ void render_MainScreen(void)
 	}
 	if (data->NextText > 6)
 	{
-		Renderer_DrawTextShaded(&data->BrainLink, 1020, 600, fg, bg);
+		Renderer_DrawTextShaded(&data->BrainLink, 1150, 750, fg, bg);
 		if (data->NextText == 7)
 		{
 			data->isNext = true;
@@ -863,6 +1039,7 @@ void release_MainScreen(void)
 	Text_FreeText(&data->Recording);
 	Text_FreeText(&data->Date);
 	Text_FreeText(&data->Rocation);
+	Text_FreeText(&data->Hanja);
 	Text_FreeText(&data->Infomation);
 	Text_FreeText(&data->BrainLink);
 	Audio_FreeMusic(&data->BGM);
@@ -899,6 +1076,18 @@ void update_TitleScene(void)
 	if (Input_GetKeyDown(VK_SPACE))
 	{
 		Scene_SetNextScene(SCENE_MAINSCREEN);
+	}
+	// 볼륨 처리부
+	if (Input_GetKey('1'))
+	{
+		Volume -= 0.01f;
+		Audio_SetVolume(Volume);
+	}
+
+	if (Input_GetKey('2'))
+	{
+		Volume += 0.01f;
+		Audio_SetVolume(Volume);
 	}
 }
 

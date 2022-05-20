@@ -61,7 +61,7 @@ void csvParser(void)
                     strcpy_s(parsing_dt.sceneData[r - 1].EFFECT_SOUND_NAME, sizeof(parsing_dt.sceneData[r - 1].EFFECT_SOUND_NAME), strt);
                     break;
                 case 6:
-                    parsing_dt.sceneData[r - 1].EFFECT_COUNT = atoi(&strt[0]);
+                    parsing_dt.sceneData[r - 1].EFFECT_COUNT = atof(&strt[0]);
                     break;
                 case 7:
                     wcscpy_s(parsing_dt.sceneData[r - 1].TEXT, sizeof(parsing_dt.sceneData[r - 1].TEXT), str);

@@ -16,7 +16,7 @@ static int32 Index = 0;
 static float Volume = 1.0f;
 static float TextDelay = 1.5f;
 
-// titleScene
+// 교수님의 titleScene
 /*
 #pragma region TitleScene
 
@@ -164,7 +164,7 @@ void release_title(void)
 }
 #pragma endregion
 */
-// mainScene
+// 교수님의 mainScene
 /*
 #pragma region MainScene
 const wchar_t* str2[] = {
@@ -514,6 +514,7 @@ void update_Extra(void)
 	data->elapsedTime += Timer_GetDeltaTime();
 	data->EffectTime += Timer_GetDeltaTime();
 
+	// PadeIn 처리
 	if (parsing_dt.sceneData[data->nowIndex].IMG_OUTPUT_STYLE == 2)
 	{
 		if (data->TextAlpha < 255 && data->blackoutAlpha > 0)
@@ -552,7 +553,7 @@ void update_Extra(void)
 	}
 	
 
-	// 텍스트 연출 지연부
+	// 텍스트 출력 지연 처리
 	if (data->elapsedTime >= TextDelay)
 	{
 		if (data->delayCount <= data->LineCount)
@@ -570,7 +571,7 @@ void update_Extra(void)
 		TextDelay -= 0.05f;
 	}
 
-
+	// 텍스트 출력 스킵처리과정
 	if (Input_GetKeyDown(VK_RETURN))
 	{
 		if (!data->isSkip)
@@ -579,6 +580,7 @@ void update_Extra(void)
 		}
 	}
 
+	// 스페이스 입력시 다음 화면 인덱스 저장
 	if (Input_GetKeyDown(VK_SPACE))
 	{
 		if (data->ChooseCount == 1)
@@ -613,6 +615,7 @@ void update_Extra(void)
 		}
 		data->goNextScene = true;
 	}
+	// PadeOut 처리부
 	if (data->goNextScene)
 	{
 		if (parsing_dt.sceneData[data->nowIndex].IMG_OUTPUT_STYLE == 1)
@@ -714,14 +717,14 @@ void render_Extra(void)
 	{
 		for (int32 i = 0; i < data->LineCount; i++)
 		{
-			Renderer_DrawTextBlended(&data->GuideLine[i], 975, 75 + (35 * i), Text);
+			Renderer_DrawTextBlended(&data->GuideLine[i], 982, 82 + (35 * i), Text);
 		}
 	}
 	else
 	{
 		for (int32 i = 0; i < data->delayCount; i++)
 		{
-			Renderer_DrawTextBlended(&data->GuideLine[i], 975, 75 + (35 * i), Text);
+			Renderer_DrawTextBlended(&data->GuideLine[i], 982, 82 + (35 * i), Text);
 		}
 	}
 	//커서 출력
@@ -1136,19 +1139,7 @@ void Scene_Change(void)
 	}
 
 	switch (s_nextScene)
-	{/*
-	case SCENE_TITLE:
-		g_Scene.Init = init_title;
-		g_Scene.Update = update_title;
-		g_Scene.Render = render_title;
-		g_Scene.Release = release_title;
-		break;
-	case SCENE_MAIN:
-		g_Scene.Init = init_main;
-		g_Scene.Update = update_main;
-		g_Scene.Render = render_main;
-		g_Scene.Release = release_main;
-		break;*/
+	{
 	case SCENE_EXTRA:
 		g_Scene.Init = init_Extra;
 		g_Scene.Update = update_Extra;

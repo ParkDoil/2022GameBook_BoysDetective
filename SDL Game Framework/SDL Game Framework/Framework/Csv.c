@@ -11,6 +11,20 @@
 static char* s_Buffer;
 static char* s_BufferPointer;
 
+void Eliminate(char* str, char ch)
+{
+    int len = strlen(str) + 1;
+    for (; *str != '\0'; str++, len--)//종료 문자를 만날 때까지 반복
+    {
+        if (*str == ch)//ch와 같은 문자일 때
+        {
+            strcpy_s(str, len, str + 1);
+            str--;
+        }
+    }
+}
+
+
 void readFileToBuffer(const char* filename)
 {
     FILE* fp;
@@ -143,17 +157,39 @@ char* ParseToAscii(const CsvItem item)
     int size = strlen(item.RawData);
     char* result = malloc(size + 1);
     memset(result, 0, size + 1);
-    if (item.RawData[0] == '"' && item.RawData[1] == '"' && item.RawData[size - 1] == '"' && item.RawData[size - 2] == '"') {
-        memcpy(result, &item.RawData[2], size - 4);
-    }
-    else if (item.RawData[0] == '"' && item.RawData[size - 1] == '"')
+
+
+    char test[2000] = { 0 };
+    strcpy_s(test, sizeof(test), item.RawData);
+
+    int boolcount = 0;
+
+    for (int i = 0; i < sizeof(test); i++)
     {
-        memcpy(result, &item.RawData[1], size - 2);
+        if (test[i] == '\"') {
+            boolcount += 1;
+        }
+        if (boolcount != 0) {
+            if (test[i - 1] == '\"' && test[i] == '\"') {
+                test[i] = '#';
+            }
+            else if (test[i - 1] == '#' && test[i] == '\"') {
+                test[i] = '\"';
+            }
+        }
     }
-    else
-    {
-        memcpy(result, item.RawData, size);
+
+    //시작 시점과 끝지점에 "가 있으면 삭제
+    //시작 지점과 끝지점을 #추가
+    int size2 = strlen(test);
+    if (test[0] == '\"' && test[size2 - 1] == '\"') {
+        test[0] = '#';
+        test[size2 - 1] = '#';
     }
+
+    Eliminate(test, '#');
+    result = test;
+
     return result;
 }
 

@@ -16,7 +16,7 @@ struct Parsing_Data {
     char    SOUND_NAME[128];
 
     char    EFFECT_SOUND_NAME[128];
-    int64   EFFECT_COUNT;
+    float   EFFECT_COUNT;
     wchar_t TEXT[2000];
 
     int64   CHOOSE_1_NEXT_SCENE;
@@ -45,12 +45,13 @@ typedef struct CsvItem
 
 typedef struct CsvFile
 {
-    int			ColumnCount;
-    int			RowCount;
+    int         ColumnCount;
+    int         RowCount;
     CsvItem* Items[MAXIMUM_ROW];
 } CsvFile;
 
 void CreateCsvFile(CsvFile* csvFile, const char* filename);
-int			ParseToInt(const CsvItem item);
+int         ParseToInt(const CsvItem item);
 char* ParseToAscii(const CsvItem item);
 wchar_t* ParseToUnicode(char* str);
+void FreeCsvFile(CsvFile* csvFile);

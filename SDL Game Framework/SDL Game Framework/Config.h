@@ -19,3 +19,4 @@
 #define CLEAR_COLOR_G	0
 #define CLEAR_COLOR_B	0
 #define CLEAR_COLOR_A	0
+

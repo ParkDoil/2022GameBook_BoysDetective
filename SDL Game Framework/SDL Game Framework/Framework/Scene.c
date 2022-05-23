@@ -385,7 +385,7 @@ typedef struct SceneData
 	Image			BackGround;
 	Image			BlackOutImage;
 	Music			Main_BGM;
-	Text			GuideLine[20];
+	Text			GuideLine[30];
 	Text			Choose_1;
 	Text			Choose_2;
 	Text			Choose_3;
@@ -398,6 +398,7 @@ typedef struct SceneData
 	bool			isSkip;
 	bool			goNextScene;
 	bool			isPlayedEffetSound;
+	bool			gotoMain;
 } SceneData;
 
 void init_Extra(void)
@@ -507,6 +508,7 @@ void init_Extra(void)
 	data->isChoice_2 = false;
 	data->isChoice_3 = false;
 	data->isPlayedEffetSound = false;
+	data->gotoMain = false;
 }
 
 void update_Extra(void)
@@ -587,42 +589,56 @@ void update_Extra(void)
 	// 스페이스 입력시 다음 화면 인덱스 저장
 	if (Input_GetKeyDown(VK_SPACE))
 	{
-		if (data->ChooseCount == 1)
+		if (parsing_dt.sceneData[data->nowIndex].CHOOSE_1_NEXT_SCENE == NULL && parsing_dt.sceneData[data->nowIndex].CHOOSE_2_NEXT_SCENE == NULL && parsing_dt.sceneData[data->nowIndex].CHOOSE_3_NEXT_SCENE == NULL)
 		{
-			Index = (parsing_dt.sceneData[data->nowIndex].CHOOSE_1_NEXT_SCENE) - 1;
+			data->gotoMain = true;
 		}
-		if (data->ChooseCount == 2)
+		else
 		{
-			if (data->isUp)
+			if (data->ChooseCount == 1)
 			{
 				Index = (parsing_dt.sceneData[data->nowIndex].CHOOSE_1_NEXT_SCENE) - 1;
 			}
-			if (!data->isUp)
+			if (data->ChooseCount == 2)
 			{
-				Index = (parsing_dt.sceneData[data->nowIndex].CHOOSE_2_NEXT_SCENE) - 1;
+				if (data->isUp)
+				{
+					Index = (parsing_dt.sceneData[data->nowIndex].CHOOSE_1_NEXT_SCENE) - 1;
+				}
+				if (!data->isUp)
+				{
+					Index = (parsing_dt.sceneData[data->nowIndex].CHOOSE_2_NEXT_SCENE) - 1;
+				}
+			}
+			if (data->ChooseCount == 3)
+			{
+				if (data->isUp)
+				{
+					Index = (parsing_dt.sceneData[data->nowIndex].CHOOSE_1_NEXT_SCENE) - 1;
+				}
+				if (!data->isUp && !data->isDown)
+				{
+					Index = (parsing_dt.sceneData[data->nowIndex].CHOOSE_2_NEXT_SCENE) - 1;
+				}
+				if (data->isDown)
+				{
+					Index = (parsing_dt.sceneData[data->nowIndex].CHOOSE_3_NEXT_SCENE) - 1;
+				}
 			}
 		}
-		if (data->ChooseCount == 3)
+		if (data->TextCheck >= data->LineCount)
 		{
-			if (data->isUp)
-			{
-				Index = (parsing_dt.sceneData[data->nowIndex].CHOOSE_1_NEXT_SCENE) - 1;
-			}
-			if (!data->isUp && !data->isDown)
-			{
-				Index = (parsing_dt.sceneData[data->nowIndex].CHOOSE_2_NEXT_SCENE) - 1;
-			}
-			if (data->isDown)
-			{
-				Index = (parsing_dt.sceneData[data->nowIndex].CHOOSE_3_NEXT_SCENE) - 1;
-			}
+			data->goNextScene = true;
 		}
-		data->goNextScene = true;
 	}
 	// PadeOut 처리부
 	if (data->goNextScene)
 	{
-		if (parsing_dt.sceneData[data->nowIndex].IMG_OUTPUT_STYLE == 1)
+		if (data->gotoMain)
+		{
+			Scene_SetNextScene(SCENE_TITLESCENE);
+		}
+		else if (parsing_dt.sceneData[data->nowIndex].IMG_OUTPUT_STYLE == 1)
 		{
 			if (data->blackoutAlpha < 255 && data->TextAlpha > 0)
 			{
@@ -722,14 +738,14 @@ void render_Extra(void)
 	{
 		for (int32 i = 0; i < data->LineCount; i++)
 		{
-			Renderer_DrawTextBlended(&data->GuideLine[i], 982, 82 + (35 * i), Text);
+			Renderer_DrawTextBlended(&data->GuideLine[i], 982, 82 + (30 * i), Text);
 		}
 	}
 	else
 	{
 		for (int32 i = 0; i < data->delayCount; i++)
 		{
-			Renderer_DrawTextBlended(&data->GuideLine[i], 982, 82 + (35 * i), Text);
+			Renderer_DrawTextBlended(&data->GuideLine[i], 982, 82 + (30 * i), Text);
 		}
 	}
 
@@ -1480,7 +1496,7 @@ void release_ControlScene(void)
 	}
 	Text_FreeText(&data->guide);
 }
-#pragma endregion controlScene
+#pragma endregion
 
 bool Scene_IsSetNextScene(void)
 {

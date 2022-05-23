@@ -22,7 +22,7 @@ void csvParser(void)
     memset(&csvFile, 0, sizeof(CsvFile));
 
 
-    sprintf_s(s_path, sizeof(s_path), "%s/%s", DATA_DIRECTORY, "obt.csv");
+    sprintf_s(s_path, sizeof(s_path), "%s/%s", DATA_DIRECTORY, "game.csv");
     CreateCsvFile(&csvFile, s_path);
 
     //

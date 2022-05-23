@@ -113,7 +113,7 @@ void CreateCsvFile(CsvFile* csvFile, const char* filename)
             int size = recordEnd - recordStart;
             csvFile->Items[row][i].RawData = (char*)malloc(sizeof(char) * (size + 1));
             //레코드 사이즈 별로 데이터 담기
-            memcpy(csvFile->Items[row][i].RawData, recordStart, size);
+            memcpy(csvFile->Items[row][i].RawData, recordStart, size); //여기서 예외 오류 발생
             csvFile->Items[row][i].RawData[size] = '\0';
 
             recordStart = recordEnd + 1;

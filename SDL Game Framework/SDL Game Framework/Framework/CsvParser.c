@@ -8,7 +8,6 @@
 #include "CsvParser.h"
 #include <crtdbg.h>
 
-//
 
 Parsing parsing_dt;
 static char s_path[MAX_PATH];

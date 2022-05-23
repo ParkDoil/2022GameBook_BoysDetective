@@ -377,6 +377,7 @@ typedef struct SceneData
 	int32			blackoutAlpha;
 	int32			FontSize;
 	int32			TextAlpha;
+	int32			TextCheck;
 	float			EffectSoundDelay;
 	float			elapsedTime;
 	float			EffectTime;
@@ -411,6 +412,7 @@ void init_Extra(void)
 	data->LineCount = 1;
 	data->delayCount = 0;
 	data->FontSize = 22;
+	data->TextCheck = 0;
 	
 	data->elapsedTime = 0.0f;
 	data->EffectTime = 0.0f;
@@ -559,6 +561,7 @@ void update_Extra(void)
 		if (data->delayCount <= data->LineCount)
 		{
 			data->delayCount++;
+			data->TextCheck++;
 		}
 		data->elapsedTime = 0;
 	}
@@ -578,6 +581,7 @@ void update_Extra(void)
 		{
 			data->isSkip = true;
 		}
+		data->TextCheck = data->LineCount;
 	}
 
 	// 스페이스 입력시 다음 화면 인덱스 저장
@@ -728,91 +732,94 @@ void render_Extra(void)
 			Renderer_DrawTextBlended(&data->GuideLine[i], 982, 82 + (35 * i), Text);
 		}
 	}
-	//커서 출력
-	if (data->ChooseCount == 1)
+
+	if (data->TextCheck >= data->LineCount)
 	{
-		Renderer_DrawTextBlended(&data->Coursur, 975, 790, Text);
-		Text_SetFontStyle(&data->Choose_1, FS_UNDERLINE);
-	}
-	if (data->ChooseCount == 2)
-	{
-		if (data->isUp)
+		//커서 출력
+		if (data->ChooseCount == 1)
 		{
 			Renderer_DrawTextBlended(&data->Coursur, 975, 790, Text);
 			Text_SetFontStyle(&data->Choose_1, FS_UNDERLINE);
-			Text_SetFontStyle(&data->Choose_2, FS_NORMAL);
+		}
+		if (data->ChooseCount == 2)
+		{
+			if (data->isUp)
+			{
+				Renderer_DrawTextBlended(&data->Coursur, 975, 790, Text);
+				Text_SetFontStyle(&data->Choose_1, FS_UNDERLINE);
+				Text_SetFontStyle(&data->Choose_2, FS_NORMAL);
+			}
+			else
+			{
+				Renderer_DrawTextBlended(&data->Coursur, 975, 820, Text);
+				Text_SetFontStyle(&data->Choose_1, FS_NORMAL);
+				Text_SetFontStyle(&data->Choose_2, FS_UNDERLINE);
+			}
+		}
+		if (data->ChooseCount == 3)
+		{
+			if (data->isUp)
+			{
+				Renderer_DrawTextBlended(&data->Coursur, 975, 790, Text);
+				Text_SetFontStyle(&data->Choose_1, FS_UNDERLINE);
+				Text_SetFontStyle(&data->Choose_2, FS_NORMAL);
+				Text_SetFontStyle(&data->Choose_3, FS_NORMAL);
+			}
+			else if (!data->isUp && !data->isDown)
+			{
+				Renderer_DrawTextBlended(&data->Coursur, 975, 820, Text);
+				Text_SetFontStyle(&data->Choose_1, FS_NORMAL);
+				Text_SetFontStyle(&data->Choose_2, FS_UNDERLINE);
+				Text_SetFontStyle(&data->Choose_3, FS_NORMAL);
+			}
+			else
+			{
+				Renderer_DrawTextBlended(&data->Coursur, 975, 850, Text);
+				Text_SetFontStyle(&data->Choose_1, FS_NORMAL);
+				Text_SetFontStyle(&data->Choose_2, FS_NORMAL);
+				Text_SetFontStyle(&data->Choose_3, FS_UNDERLINE);
+			}
+		}
+
+		//선택지 출력
+		if (data->ChooseCount == 1)
+		{
+			Renderer_DrawTextBlended(&data->Choose_1, 1000, 790, main);
 		}
 		else
 		{
-			Renderer_DrawTextBlended(&data->Coursur, 975, 820, Text);
-			Text_SetFontStyle(&data->Choose_1, FS_NORMAL);
-			Text_SetFontStyle(&data->Choose_2, FS_UNDERLINE);
-		}
-	}
-	if (data->ChooseCount == 3)
-	{
-		if (data->isUp)
-		{
-			Renderer_DrawTextBlended(&data->Coursur, 975, 790, Text);
-			Text_SetFontStyle(&data->Choose_1, FS_UNDERLINE);
-			Text_SetFontStyle(&data->Choose_2, FS_NORMAL);
-			Text_SetFontStyle(&data->Choose_3, FS_NORMAL);
-		}
-		else if (!data->isUp && !data->isDown)
-		{
-			Renderer_DrawTextBlended(&data->Coursur, 975, 820, Text);
-			Text_SetFontStyle(&data->Choose_1, FS_NORMAL);
-			Text_SetFontStyle(&data->Choose_2, FS_UNDERLINE);
-			Text_SetFontStyle(&data->Choose_3, FS_NORMAL);
-		}
-		else
-		{
-			Renderer_DrawTextBlended(&data->Coursur, 975, 850, Text);
-			Text_SetFontStyle(&data->Choose_1, FS_NORMAL);
-			Text_SetFontStyle(&data->Choose_2, FS_NORMAL);
-			Text_SetFontStyle(&data->Choose_3, FS_UNDERLINE);
-		}
-	}
-
-	//선택지 출력
-
-	if (data->ChooseCount == 1)
-	{
-		Renderer_DrawTextBlended(&data->Choose_1, 1000, 790, main);
-	}
-	else
-	{
-		if (*(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_1) != L"")
-		{
-			if (data->isChoice_1)
+			if (*(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_1) != L"")
 			{
-				Renderer_DrawTextBlended(&data->Choose_1, 1000, 790, main);
+				if (data->isChoice_1)
+				{
+					Renderer_DrawTextBlended(&data->Choose_1, 1000, 790, main);
+				}
+				else
+				{
+					Renderer_DrawTextBlended(&data->Choose_1, 1000, 790, notchoice);
+				}
 			}
-			else
+			if (*(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_2) != L"")
 			{
-				Renderer_DrawTextBlended(&data->Choose_1, 1000, 790, notchoice);
+				if (data->isChoice_2)
+				{
+					Renderer_DrawTextBlended(&data->Choose_2, 1000, 820, main);
+				}
+				else
+				{
+					Renderer_DrawTextBlended(&data->Choose_2, 1000, 820, notchoice);
+				}
 			}
-		}
-		if (*(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_2) != L"")
-		{
-			if (data->isChoice_2)
+			if (*(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_3) != L"")
 			{
-				Renderer_DrawTextBlended(&data->Choose_2, 1000, 820, main);
-			}
-			else
-			{
-				Renderer_DrawTextBlended(&data->Choose_2, 1000, 820, notchoice);
-			}
-		}
-		if (*(parsing_dt.sceneData[data->nowIndex].CHOOSE_TEXT_3) != L"")
-		{
-			if (data->isChoice_3)
-			{
-				Renderer_DrawTextBlended(&data->Choose_3, 1000, 850, main);
-			}
-			else
-			{
-				Renderer_DrawTextBlended(&data->Choose_3, 1000, 850, notchoice);
+				if (data->isChoice_3)
+				{
+					Renderer_DrawTextBlended(&data->Choose_3, 1000, 850, main);
+				}
+				else
+				{
+					Renderer_DrawTextBlended(&data->Choose_3, 1000, 850, notchoice);
+				}
 			}
 		}
 	}
@@ -862,6 +869,7 @@ typedef struct MainScreenData
 	int32	BioLinkCheck;
 	int32	NextText;
 	bool	isNext;
+	bool	canShow;
 	Image	BackGround;
 	Music	BGM;
 } MainScreenData;
@@ -884,9 +892,9 @@ void init_MainScreen(void)
 	Text_CreateText(&data->Infomation[2], "LoadingSceneText.ttf", 24, L"このチップセットは、쎛閣情報調査室存썾記쎜物です。", wcslen(L"このチップセットは、쎛閣情報調査室存썾記쎜物です。"));
 	Text_CreateText(&data->LoadConformMent, "LoadingSceneText.ttf", 24, L"로드 컨펌중", wcslen(L"로드 컨펌중"));
 	Text_CreateText(&data->LoadConform[0], "LoadingSceneText.ttf", 24, L"Progress [20%] : 쎃쎃", wcslen(L"Progress [20%] : 쎃쎃"));
-	Text_CreateText(&data->LoadConform[1], "LoadingSceneText.ttf", 24, L"Progress [40%] : 쎃쎃쎃쎃", wcslen(L"Progress [40%] : 쎃쎃쎃쎃"));
-	Text_CreateText(&data->LoadConform[2], "LoadingSceneText.ttf", 24, L"Progress [80%] : 쎃쎃쎃쎃쎃쎃쎃쎃", wcslen(L"Progress [80%] : 쎃쎃쎃쎃쎃쎃쎃쎃"));
-	Text_CreateText(&data->LoadConform[3], "LoadingSceneText.ttf", 24, L"Progress [100%] : 쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃", wcslen(L"Progress [100%] : 쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃"));
+	Text_CreateText(&data->LoadConform[1], "LoadingSceneText.ttf", 24, L"Progress [40%] : 쎃쎃쎃쎃쎃쎃", wcslen(L"Progress [40%] : 쎃쎃쎃쎃쎃쎃"));
+	Text_CreateText(&data->LoadConform[2], "LoadingSceneText.ttf", 24, L"Progress [80%] : 쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃", wcslen(L"Progress [80%] : 쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃"));
+	Text_CreateText(&data->LoadConform[3], "LoadingSceneText.ttf", 24, L"Progress [100%] : 쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃", wcslen(L"Progress [100%] : 쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃쎃"));
 	Text_CreateText(&data->BioLink[0], "LoadingSceneText.ttf", 24, L"대뇌 감정 링크 확인 .", wcslen(L"대뇌 감정 링크 확인 ."));
 	Text_CreateText(&data->BioLink[1], "LoadingSceneText.ttf", 24, L"대뇌 감정 링크 확인 . .", wcslen(L"대뇌 감정 링크 확인 . ."));
 	Text_CreateText(&data->BioLink[2], "LoadingSceneText.ttf", 24, L"대뇌 감정 링크 확인 . . .", wcslen(L"대뇌 감정 링크 확인 . . ."));
@@ -896,6 +904,7 @@ void init_MainScreen(void)
 	data->RoadingCheck = 1;
 	data->NextText = 0;
 	data->isNext = false;
+	data->canShow = false;
 
 	Image_LoadImage(&data->BackGround,"loading.png");
 	Audio_LoadMusic(&data->BGM, "prologue.mp3");
@@ -910,7 +919,9 @@ void update_MainScreen(void)
 
 	static float elapsedTime;
 	static float gotoNextScene;
+	static float infomationTextCheckTime;
 	elapsedTime += Timer_GetDeltaTime();
+	infomationTextCheckTime += Timer_GetDeltaTime();
 
 	// 볼륨 처리부
 	if (Input_GetKey('1'))
@@ -923,6 +934,11 @@ void update_MainScreen(void)
 	{
 		Volume += 0.01f;
 		Audio_SetVolume(Volume);
+	}
+
+	if (infomationTextCheckTime >= 1.1f)
+	{
+		data->canShow = true;
 	}
 
 	if (elapsedTime >= 0.7f)
@@ -963,12 +979,16 @@ void render_MainScreen(void)
 
 	Renderer_DrawImage(&data->BackGround, 0, 0);
 
-	Renderer_DrawTextBlended(&data->Infomation[0], 640, 800, text);
-	Renderer_DrawTextBlended(&data->Infomation[1], 520, 830, text);
-	Renderer_DrawTextBlended(&data->Infomation[2], 530, 860, text);
+	if (data->canShow)
+	{
+		Renderer_DrawTextBlended(&data->Infomation[0], 640, 710, text);
+		Renderer_DrawTextBlended(&data->Infomation[1], 520, 740, text);
+		Renderer_DrawTextBlended(&data->Infomation[2], 530, 770, text);
+	}
+
 	for (int32 i = 0; i < data->RoadingCheck; i++)
 	{
-		Renderer_DrawTextBlended(&data->RoadingText[i], 70, 30 , text);
+		Renderer_DrawTextBlended(&data->RoadingText[i], 150, 150, text);
 		if (i > 0)
 		{
 			Text_FreeText(&data->RoadingText[i - 1]);
@@ -980,7 +1000,7 @@ void render_MainScreen(void)
 	}
 	if (data->NextText > 0)
 	{
-		Renderer_DrawTextBlended(&data->Barcode, 100, 70, text);
+		Renderer_DrawTextBlended(&data->Barcode, 160, 180, text);
 		if (data->NextText == 1)
 		{
 			data->isNext = true;
@@ -988,7 +1008,7 @@ void render_MainScreen(void)
 	}
 	if (data->NextText > 1)
 	{
-		Renderer_DrawTextBlended(&data->Success, 100, 100, text);
+		Renderer_DrawTextBlended(&data->Success, 160, 210, text);
 		if (data->NextText == 2)
 		{
 			data->isNext = true;
@@ -1012,7 +1032,7 @@ void render_MainScreen(void)
 	}
 	if (data->NextText > 4)
 	{
-		Renderer_DrawTextBlended(&data->LoadConformMent, 30, 450, text);
+		Renderer_DrawTextBlended(&data->LoadConformMent, 30, 480, text);
 		if (data->NextText == 5)
 		{
 			data->isNext = true;
@@ -1022,7 +1042,7 @@ void render_MainScreen(void)
 	{
 		for (int32 i = 0; i < data->ConformCheck; i++)
 		{
-			Renderer_DrawTextBlended(&data->LoadConform[i], 30, 480, text);
+			Renderer_DrawTextBlended(&data->LoadConform[i], 30, 510, text);
 			if (i > 0)
 			{
 				Text_FreeText(&data->LoadConform[i - 1]);
@@ -1038,7 +1058,7 @@ void render_MainScreen(void)
 	{
 		for (int32 i = 0; i < data->BioLinkCheck; i++)
 		{
-			Renderer_DrawTextBlended(&data->BioLink[i], 1100, 750, text);
+			Renderer_DrawTextBlended(&data->BioLink[i], 1100, 480, text);
 			if (i > 0)
 			{
 				Text_FreeText(&data->BioLink[i - 1]);
@@ -1052,7 +1072,7 @@ void render_MainScreen(void)
 	}
 	if (data->NextText > 7)
 	{
-		Renderer_DrawTextBlended(&data->BrainLink, 1350, 750, text);
+		Renderer_DrawTextBlended(&data->BrainLink, 1350, 480, text);
 	}
 }
 
@@ -1088,13 +1108,12 @@ void release_MainScreen(void)
 typedef struct TitleSceneData
 {
 	Image			BackGround;
-	Text			Menu[3];
+	Text			Menu[4];
 	Music			BGM;
 	bool			isChoice_1;
 	bool			isChoice_2;
 	bool			isChoice_3;
-	bool			isUp;
-	bool			isDown;
+	bool			isChoice_4;
 } TitleSceneData;
 
 void init_TitleScene(void)
@@ -1105,9 +1124,10 @@ void init_TitleScene(void)
 
 	Image_LoadImage(&data->BackGround, "main_title.png");
 
-	Text_CreateText(&data->Menu[0], "12LotteMartHappyMedium.ttf", 32, L"게임시작", wcslen(L"게임시작"));
-	Text_CreateText(&data->Menu[1], "12LotteMartHappyMedium.ttf", 32, L"제작진", wcslen(L"제작진"));
-	Text_CreateText(&data->Menu[2], "12LotteMartHappyMedium.ttf", 32, L"게임종료", wcslen(L"게임종료"));
+	Text_CreateText(&data->Menu[0], "BareunBatangL.ttf", 36, L"게임시작", wcslen(L"게임시작"));
+	Text_CreateText(&data->Menu[1], "BareunBatangL.ttf", 32, L"제작진", wcslen(L"제작진"));
+	Text_CreateText(&data->Menu[2], "BareunBatangL.ttf", 32, L"조작법", wcslen(L"조작법"));
+	Text_CreateText(&data->Menu[3], "BareunBatangL.ttf", 32, L"게임종료", wcslen(L"게임종료"));
 
 	Audio_LoadMusic(&data->BGM, "main.mp3");
 	Audio_GetVolume();
@@ -1117,9 +1137,7 @@ void init_TitleScene(void)
 	data->isChoice_1 = true;
 	data->isChoice_2 = false;
 	data->isChoice_3 = false;
-
-	data->isDown = false;
-	data->isUp = true;
+	data->isChoice_4 = false;
 }
 
 void update_TitleScene(void)
@@ -1137,6 +1155,10 @@ void update_TitleScene(void)
 			Scene_SetNextScene(SCENE_CEADITSSCENE);
 		}
 		if (data->isChoice_3)
+		{
+			Scene_SetNextScene(SCENE_CONTROLSCENE);
+		}
+		if (data->isChoice_4)
 		{
 			exit(0);
 		}
@@ -1156,51 +1178,82 @@ void update_TitleScene(void)
 
 	if (Input_GetKeyDown(VK_UP))
 	{
-			if (!data->isUp && !data->isDown)
+			if (!data->isChoice_1 && data->isChoice_2 && !data->isChoice_3 && !data->isChoice_4)
 			{
-				data->isUp = !data->isUp;
 				data->isChoice_1 = true;
 				data->isChoice_2 = false;
+				data->isChoice_3 = false;
+				data->isChoice_4 = false;
 
-				Text_CreateText(&data->Menu[0], "12LotteMartHappyMedium.ttf", 36, L"게임시작", wcslen(L"게임시작"));
-				Text_CreateText(&data->Menu[1], "12LotteMartHappyMedium.ttf", 32, L"제작진", wcslen(L"제작진"));
-				Text_CreateText(&data->Menu[2], "12LotteMartHappyMedium.ttf", 32, L"게임종료", wcslen(L"게임종료"));
+				Text_CreateText(&data->Menu[0], "BareunBatangL.ttf", 36, L"게임시작", wcslen(L"게임시작"));
+				Text_CreateText(&data->Menu[1], "BareunBatangL.ttf", 32, L"제작진", wcslen(L"제작진"));
+				Text_CreateText(&data->Menu[2], "BareunBatangL.ttf", 32, L"조작법", wcslen(L"조작법"));
+				Text_CreateText(&data->Menu[3], "BareunBatangL.ttf", 32, L"게임종료", wcslen(L"게임종료"));
 			}
-			else if (!data->isUp && data->isDown)
+			else if (!data->isChoice_1 && !data->isChoice_2 && data->isChoice_3 && !data->isChoice_4)
 			{
-				data->isDown = !data->isDown;
 				data->isChoice_1 = false;
 				data->isChoice_2 = true;
 				data->isChoice_3 = false;
+				data->isChoice_4 = false;
 
-				Text_CreateText(&data->Menu[0], "12LotteMartHappyMedium.ttf", 32, L"게임시작", wcslen(L"게임시작"));
-				Text_CreateText(&data->Menu[1], "12LotteMartHappyMedium.ttf", 36, L"제작진", wcslen(L"제작진"));
-				Text_CreateText(&data->Menu[2], "12LotteMartHappyMedium.ttf", 32, L"게임종료", wcslen(L"게임종료"));
+				Text_CreateText(&data->Menu[0], "BareunBatangL.ttf", 32, L"게임시작", wcslen(L"게임시작"));
+				Text_CreateText(&data->Menu[1], "BareunBatangL.ttf", 36, L"제작진", wcslen(L"제작진"));
+				Text_CreateText(&data->Menu[2], "BareunBatangL.ttf", 32, L"조작법", wcslen(L"조작법"));
+				Text_CreateText(&data->Menu[3], "BareunBatangL.ttf", 32, L"게임종료", wcslen(L"게임종료"));
+			}
+			else if (!data->isChoice_1 && !data->isChoice_2 && !data->isChoice_3 && data->isChoice_4)
+			{
+				data->isChoice_1 = false;
+				data->isChoice_2 = false;
+				data->isChoice_3 = true;
+				data->isChoice_4 = false;
+
+				Text_CreateText(&data->Menu[0], "BareunBatangL.ttf", 32, L"게임시작", wcslen(L"게임시작"));
+				Text_CreateText(&data->Menu[1], "BareunBatangL.ttf", 32, L"제작진", wcslen(L"제작진"));
+				Text_CreateText(&data->Menu[2], "BareunBatangL.ttf", 36, L"조작법", wcslen(L"조작법"));
+				Text_CreateText(&data->Menu[3], "BareunBatangL.ttf", 32, L"게임종료", wcslen(L"게임종료"));
 			}
 	}
 	if (Input_GetKeyDown(VK_DOWN))
 	{
-			if (data->isUp && !data->isDown)
-			{
-				data->isUp = !data->isUp;
-				data->isChoice_1 = false;
-				data->isChoice_2 = true;
-				data->isChoice_3 = false;
+		if (data->isChoice_1 && !data->isChoice_2 && !data->isChoice_3 && !data->isChoice_4)
+		{
+			data->isChoice_1 = false;
+			data->isChoice_2 = true;
+			data->isChoice_3 = false;
+			data->isChoice_4 = false;
 
-				Text_CreateText(&data->Menu[0], "12LotteMartHappyMedium.ttf", 32, L"게임시작", wcslen(L"게임시작"));
-				Text_CreateText(&data->Menu[1], "12LotteMartHappyMedium.ttf", 36, L"제작진", wcslen(L"제작진"));
-				Text_CreateText(&data->Menu[2], "12LotteMartHappyMedium.ttf", 32, L"게임종료", wcslen(L"게임종료"));
-			}
-			else if (!data->isUp && !data->isDown)
-			{
-				data->isDown = !data->isDown;
-				data->isChoice_2 = false;
-				data->isChoice_3 = true;
+			Text_CreateText(&data->Menu[0], "BareunBatangL.ttf", 32, L"게임시작", wcslen(L"게임시작"));
+			Text_CreateText(&data->Menu[1], "BareunBatangL.ttf", 36, L"제작진", wcslen(L"제작진"));
+			Text_CreateText(&data->Menu[2], "BareunBatangL.ttf", 32, L"조작법", wcslen(L"조작법"));
+			Text_CreateText(&data->Menu[3], "BareunBatangL.ttf", 32, L"게임종료", wcslen(L"게임종료"));
+		}
+		else if (!data->isChoice_1 && data->isChoice_2 && !data->isChoice_3 && !data->isChoice_4)
+		{
+			data->isChoice_1 = false;
+			data->isChoice_2 = false;
+			data->isChoice_3 = true;
+			data->isChoice_4 = false;
 
-				Text_CreateText(&data->Menu[0], "12LotteMartHappyMedium.ttf", 32, L"게임시작", wcslen(L"게임시작"));
-				Text_CreateText(&data->Menu[1], "12LotteMartHappyMedium.ttf", 32, L"제작진", wcslen(L"제작진"));
-				Text_CreateText(&data->Menu[2], "12LotteMartHappyMedium.ttf", 36, L"게임종료", wcslen(L"게임종료"));
-			}
+			Text_CreateText(&data->Menu[0], "BareunBatangL.ttf", 32, L"게임시작", wcslen(L"게임시작"));
+			Text_CreateText(&data->Menu[1], "BareunBatangL.ttf", 32, L"제작진", wcslen(L"제작진"));
+			Text_CreateText(&data->Menu[2], "BareunBatangL.ttf", 36, L"조작법", wcslen(L"조작법"));
+			Text_CreateText(&data->Menu[3], "BareunBatangL.ttf", 32, L"게임종료", wcslen(L"게임종료"));
+		}
+		else if (!data->isChoice_1 && !data->isChoice_2 && data->isChoice_3 && !data->isChoice_4)
+		{
+			data->isChoice_1 = false;
+			data->isChoice_2 = false;
+			data->isChoice_3 = false;
+			data->isChoice_4 = true;
+
+			Text_CreateText(&data->Menu[0], "BareunBatangL.ttf", 32, L"게임시작", wcslen(L"게임시작"));
+			Text_CreateText(&data->Menu[1], "BareunBatangL.ttf", 32, L"제작진", wcslen(L"제작진"));
+			Text_CreateText(&data->Menu[2], "BareunBatangL.ttf", 32, L"조작법", wcslen(L"조작법"));
+			Text_CreateText(&data->Menu[3], "BareunBatangL.ttf", 36, L"게임종료", wcslen(L"게임종료"));
+		}
+			
 	}
 }
 
@@ -1212,10 +1265,10 @@ void render_TitleScene(void)
 	SDL_Color notchoice = { .r = 255, .g = 255, .b = 255, .a = 90 };
 
 	Renderer_DrawImage(&data->BackGround, 0, 0);
-
+	
 	if (data->isChoice_1)
 	{
-		Renderer_DrawTextBlended(&data->Menu[0], 735, 600, main);
+		Renderer_DrawTextBlended(&data->Menu[0], 730, 600, main);
 	}
 	else
 	{
@@ -1223,19 +1276,28 @@ void render_TitleScene(void)
 	}
 	if (data->isChoice_2)
 	{
-		Renderer_DrawTextBlended(&data->Menu[1], 735, 650, main);
+		Renderer_DrawTextBlended(&data->Menu[1], 743, 650, main);
 	}
 	else
 	{
-		Renderer_DrawTextBlended(&data->Menu[1], 735, 650, notchoice);
+		Renderer_DrawTextBlended(&data->Menu[1], 748, 650, notchoice);
 	}
 	if (data->isChoice_3)
 	{
-		Renderer_DrawTextBlended(&data->Menu[2], 735, 700, main);
+		Renderer_DrawTextBlended(&data->Menu[2], 743, 700, main);
 	}
 	else
 	{
-		Renderer_DrawTextBlended(&data->Menu[2], 735, 700, notchoice);
+		Renderer_DrawTextBlended(&data->Menu[2], 748, 700, notchoice);
+	}
+
+	if (data->isChoice_4)
+	{
+		Renderer_DrawTextBlended(&data->Menu[3], 730, 750, main);
+	}
+	else
+	{
+		Renderer_DrawTextBlended(&data->Menu[3], 735, 750, notchoice);
 	}
 }
 
@@ -1258,6 +1320,7 @@ void release_TitleScene(void)
 typedef struct CreditsSceneData
 {
 	Text		Staff[16];
+	Text		guide[2];
 	int32		rocation;
 } CreditsSceneData;
 void init_CreditsScene(void)
@@ -1283,12 +1346,23 @@ void init_CreditsScene(void)
 	Text_CreateText(&data->Staff[14], "12LotteMartHappyLight.ttf", 22, L"팀장 : 박도일(잡업무 및 메인코딩)", wcslen(L"팀장 : 박도일(잡업무 및 메인코딩)"));
 	Text_CreateText(&data->Staff[15], "12LotteMartHappyLight.ttf", 22, L"소감 - 힘들었지만 재미있는 경험이었고, 밤새 작업해서 주신 기획팀원분들 모두, 그리고 조금 모자란 팀장 믿고 따라와준 팀원들 전부 고맙습니다.", wcslen(L"소감 - 힘들었지만 재미있는 경험이었고, 밤새 작업해서 주신 기획팀원분들 모두, 그리고 조금 모자란 팀장 믿고 따라와준 팀원들 전부 고맙습니다."));
 
+	Text_CreateText(&data->guide[0], "BareunBatangL.ttf", 18, L"메인화면으로 돌아가기 : SPACE", wcslen(L"메인화면으로 돌아가기 : SPACE"));
+	Text_CreateText(&data->guide[1], "BareunBatangL.ttf", 18, L"스크롤 빨리 감기 : ENTER", wcslen(L"스크롤 빨리 감기 : ENTER"));
+
 	data->rocation = 900;
 } 
 void update_CreditsScene(void)
 {
 	CreditsSceneData* data = (CreditsSceneData*)g_Scene.Data;
-	data->rocation -= 2;
+
+	if (Input_GetKey(VK_RETURN))
+	{
+		data->rocation -= 10;
+	}
+	else
+	{
+		data->rocation -= 2;
+	}
 
 	if (Input_GetKeyDown(VK_SPACE))
 	{
@@ -1303,6 +1377,9 @@ void render_CreditsScene(void)
 	SDL_Color fgy = { .r = 255, .g = 255, .b = 0, .a = 255 };
 	SDL_Color fgr = { .r = 255, .g = 0, .b = 0, .a = 255 };
 	SDL_Color bg = { .r = 0,.g = 0,.b = 0,.a = 255 };
+
+	Renderer_DrawTextShaded(&data->guide[0], 1340, 5, fgw, bg);
+	Renderer_DrawTextShaded(&data->guide[1], 1380, 25, fgw, bg);
 
 	for (int32 i = 0; i < 16; i++)
 	{
@@ -1328,10 +1405,82 @@ void release_CreditsScene(void)
 	{
 		Text_FreeText(&data->Staff[i]);
 	}
+	Text_FreeText(&data->guide);
 	SafeFree(g_Scene.Data);
 
 }
 #pragma endregion
+
+#pragma region controlScene
+typedef struct ControlSceneData
+{
+	Text	Tutorial[6];
+	Text	guide;
+} ControlSceneData;
+void init_ControlScene(void)
+{
+	g_Scene.Data = malloc(sizeof(ControlSceneData));
+	memset(g_Scene.Data, 0, sizeof(ControlSceneData));
+	ControlSceneData* data = (ControlSceneData*)g_Scene.Data;
+
+	Text_CreateText(&data->Tutorial[0], "BareunBatangL.ttf", 24, L"1 : 볼륨 감소", wcslen(L"1 : 볼륨 감소"));
+	Text_CreateText(&data->Tutorial[1], "BareunBatangL.ttf", 24, L"2 : 볼륨 증가", wcslen(L"2 : 볼륨 증가"));
+	Text_CreateText(&data->Tutorial[2], "BareunBatangL.ttf", 24, L"3 : 음소거", wcslen(L"3 : 음소거"));
+	Text_CreateText(&data->Tutorial[3], "BareunBatangL.ttf", 24, L"ENTER : 텍스트 출력 스킵", wcslen(L"ENTER : 텍스트 출력 스킵"));
+	Text_CreateText(&data->Tutorial[4], "BareunBatangL.ttf", 24, L"SPACE : 선택지 선택", wcslen(L"SPACE : 선택지 선택"));
+	Text_CreateText(&data->Tutorial[5], "BareunBatangL.ttf", 24, L"위,아래 방향키 : 선택지 고르기", wcslen(L"위,아래 방향키 : 선택지 고르기"));
+
+	Text_CreateText(&data->guide, "BareunBatangL.ttf", 18, L"메인화면으로 돌아가기 : SPACE", wcslen(L"메인화면으로 돌아가기 : SPACE"));
+}
+void update_ControlScene(void)
+{
+	if (Input_GetKeyDown(VK_SPACE))
+	{
+		Scene_SetNextScene(SCENE_TITLESCENE);
+	}
+}
+void render_ControlScene(void)
+{
+	ControlSceneData* data = (ControlSceneData*)g_Scene.Data;
+	SDL_Color main = { .r = 255, .g = 255, .b = 255, .a = 255 };
+
+	for (int32 i = 0; i < 6; i++)
+	{
+		if (i < 2)
+		{
+			Renderer_DrawTextBlended(&data->Tutorial[i], 720, 270 + (30 * i), main);
+		}
+		else if (i == 2)
+		{
+			Renderer_DrawTextBlended(&data->Tutorial[i], 730, 270 + (30 * i), main);
+		}
+		else if (i == 3)
+		{
+			Renderer_DrawTextBlended(&data->Tutorial[i], 650, 270 + (30 * i), main);
+		}
+		else if (i == 4)
+		{
+			Renderer_DrawTextBlended(&data->Tutorial[i], 670, 270 + (30 * i), main);
+		}
+		else
+		{
+			Renderer_DrawTextBlended(&data->Tutorial[i], 625, 270 + (30 * i), main);
+		}
+	}
+
+	Renderer_DrawTextBlended(&data->guide, 670 , 50, main);
+}
+void release_ControlScene(void)
+{
+	ControlSceneData* data = (ControlSceneData*)g_Scene.Data;
+
+	for (int32 i = 0; i < 6; i++)
+	{
+		Text_FreeText(&data->Tutorial[i]);
+	}
+	Text_FreeText(&data->guide);
+}
+#pragma endregion controlScene
 
 bool Scene_IsSetNextScene(void)
 {
@@ -1387,6 +1536,12 @@ void Scene_Change(void)
 		g_Scene.Update = update_CreditsScene;
 		g_Scene.Render = render_CreditsScene;
 		g_Scene.Release = release_CreditsScene;
+		break;
+	case SCENE_CONTROLSCENE:
+		g_Scene.Init = init_ControlScene;
+		g_Scene.Update = update_ControlScene;
+		g_Scene.Render = render_ControlScene;
+		g_Scene.Release = release_ControlScene;
 		break;
 	}
 

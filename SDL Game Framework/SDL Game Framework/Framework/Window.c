@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "App.h"
 
-static const char* s_Title = "Hello SDL";
+static const char* s_Title = "AKEBONO";
 static int32 s_Width = WINDOW_WIDTH;
 static int32 s_Height = WINDOW_HEIGHT;
 static uint32 s_flags = 0;

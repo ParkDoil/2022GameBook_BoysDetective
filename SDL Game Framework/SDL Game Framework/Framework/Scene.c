@@ -1164,6 +1164,7 @@ void update_TitleScene(void)
 	{
 		if (data->isChoice_1)
 		{
+			Index = 0;
 			Scene_SetNextScene(SCENE_MAINSCREEN);
 		}
 		if (data->isChoice_2)
